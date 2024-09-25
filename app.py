@@ -9,11 +9,20 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 import webbrowser
 import os
+import tkinter as tk
+from tkinter import ttk, messagebox
 
 # Initialize pyttsx3
 engine = pyttsx3.init('sapi5')
 voices = engine.getProperty('voices')
 engine.setProperty('voice', voices[1].id)
+
+# Simulated caregiver database
+caregivers = [
+    {"name": "John Doe", "specialty": "General Care", "phone": "123-456-7890"},
+    {"name": "Jane Smith", "specialty": "Elder Care", "phone": "234-567-8901"},
+    {"name": "Mike Johnson", "specialty": "Physical Therapy", "phone": "345-678-9012"}
+]
 
 # Function to make the assistant speak
 def speak(audio):
@@ -52,6 +61,8 @@ def handleCommand():
         search_internet(search_query)
     elif 'login' in query:
         login_to_site()
+    elif 'caregiver' in query:
+        show_caregivers()
     else:
         speak("I'm sorry, I didn't understand that command.")
 
@@ -76,7 +87,7 @@ def play_youtube_music(song):
         speak(f"Now playing {song} on YouTube")
     except Exception as e:
         print(f"Error playing music: {e}")
-        speak("Opening YouTube in your default browser .")
+        speak("Opening YouTube in your default browser.")
         webbrowser.open(f"https://www.youtube.com/results?search_query={song.replace(' ', '+')}")
 
 # Function to search the web
@@ -105,7 +116,7 @@ def search_internet(query):
         driver.quit()
     except Exception as e:
         print(f"Error searching the web: {e}")
-        speak("Opening Google in your default browser .")
+        speak("Opening Google in your default browser.")
         webbrowser.open(f"https://www.google.com/search?q={query.replace(' ', '+')}")
 
 # Function to login to a site using voice as password
@@ -136,7 +147,51 @@ def compare_passwords(enrolled_password):
     else:
         speak("Password does not match.")
 
+# Function to show available caregivers
+def show_caregivers():
+    caregiver_window = tk.Toplevel(root)
+    caregiver_window.title("Available Caregivers")
+    caregiver_window.geometry("400x300")
+
+    tree = ttk.Treeview(caregiver_window, columns=("Name", "Specialty", "Phone"), show="headings")
+    tree.heading("Name", text="Name")
+    tree.heading("Specialty", text="Specialty")
+    tree.heading("Phone", text="Phone")
+
+    for caregiver in caregivers:
+        tree.insert("", "end", values=(caregiver["name"], caregiver["specialty"], caregiver["phone"]))
+
+    tree.pack(expand=True, fill="both")
+
+    def dial_caregiver():
+        selected_item = tree.selection()[0]
+        caregiver = tree.item(selected_item)["values"]
+        speak(f"Dialing {caregiver[0]} at {caregiver[2]}")
+        messagebox.showinfo("Dialing", f"Dialing {caregiver[0]} at {caregiver[2]}")
+
+    dial_button = ttk.Button(caregiver_window, text="Dial Selected Caregiver", command=dial_caregiver)
+    dial_button.pack(pady=10)
+
+# GUI setup
+root = tk.Tk()
+root.title("Virtual Assistant")
+root.geometry("300x200")
+
+label = tk.Label(root, text="Virtual Assistant")
+label.pack(pady=10)
+
+start_button = ttk.Button(root, text="Start Listening", command=handleCommand)
+start_button.pack(pady=10)
+
+caregiver_button = ttk.Button(root, text="Show Caregivers", command=show_caregivers)
+caregiver_button.pack(pady=10)
+
+def on_closing():
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        root.destroy()
+
+root.protocol("WM_DELETE_WINDOW", on_closing)
+
 if __name__ == '__main__':
     speak("Hello, I'm your virtual assistant. How can I help you?")
-    while True:
-        handleCommand()
+    root.mainloop()
