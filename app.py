@@ -11,17 +11,24 @@ import webbrowser
 import os
 import tkinter as tk
 from tkinter import ttk, messagebox
+import africastalking  # For Africa's Talking SMS API
 
 # Initialize pyttsx3
 engine = pyttsx3.init('sapi5')
 voices = engine.getProperty('voices')
 engine.setProperty('voice', voices[1].id)
 
+# Africa's Talking API credentials
+username = "your_username"  # Replace with your Africa's Talking username
+api_key = "your_api_key"     # Replace with your Africa's Talking API key
+africastalking.initialize(username, api_key)
+sms = africastalking.SMS  # Initialize SMS service
+
 # Simulated caregiver database
 caregivers = [
-    {"name": "John Doe", "specialty": "General Care", "phone": "123-456-7890"},
-    {"name": "Jane Smith", "specialty": "Elder Care", "phone": "234-567-8901"},
-    {"name": "Mike Johnson", "specialty": "Physical Therapy", "phone": "345-678-9012"}
+    {"name": "John Doe", "specialty": "General Care", "phone": "+254714805460"},
+    {"name": "Jane Smith", "specialty": "Elder Care", "phone": "+254715678901"},
+    {"name": "Mike Johnson", "specialty": "Physical Therapy", "phone": "+254723456789"}
 ]
 
 # Function to make the assistant speak
@@ -48,23 +55,48 @@ def takeCommand():
         return "None"
     return query
 
-# Function to handle user commands
-def handleCommand():
-    query = takeCommand().lower()
-    if 'play music' in query:
-        speak('What song would you like to play?')
-        song = takeCommand()
-        play_youtube_music(song)
-    elif 'search the web for' in query:
-        search_query = query.replace('search the web for', '').strip()
-        speak(f"Searching the web for {search_query}")
-        search_internet(search_query)
-    elif 'login' in query:
-        login_to_site()
-    elif 'caregiver' in query:
-        show_caregivers()
+# Function to send SMS to the selected caregiver using Africa's Talking
+def send_sms_to_caregiver(caregiver):
+    phone_number = caregiver["phone"]
+    speak(f"Sending SMS to {caregiver['name']} at {phone_number}")
+
+    # SMS message content
+    message = f"Hello {caregiver['name']}, you have been selected for a caregiving service. Please respond if available."
+
+    # Send SMS using Africa's Talking
+    try:
+        response = sms.send(message, [phone_number])
+        print(f"SMS sent: {response}")
+        speak(f"SMS sent successfully to {caregiver['name']}")
+    except Exception as e:
+        print(f"Error sending SMS: {e}")
+        speak("Unable to send SMS at the moment.")
+    
+    messagebox.showinfo("SMS Sent", f"SMS sent to {caregiver['name']} at {phone_number}")
+
+# Function to handle the caregiver selection by voice
+def choose_caregiver_by_voice():
+    # List caregivers out loud
+    speak("Here are the available caregivers:")
+    for i, caregiver in enumerate(caregivers):
+        speak(f"Caregiver {i+1}: {caregiver['name']}, Specialty: {caregiver['specialty']}")
+
+    speak("Please say the name of the caregiver you want to select.")
+    
+    selected_caregiver_name = takeCommand().lower()
+
+    # Try to find the caregiver based on the name spoken by the user
+    selected_caregiver = None
+    for caregiver in caregivers:
+        if caregiver["name"].lower() in selected_caregiver_name:
+            selected_caregiver = caregiver
+            break
+    
+    if selected_caregiver:
+        send_sms_to_caregiver(selected_caregiver)
     else:
-        speak("I'm sorry, I didn't understand that command.")
+        speak("Sorry, I couldn't find the caregiver by that name. Please try again.")
+        choose_caregiver_by_voice()
 
 # Function to play music from YouTube
 def play_youtube_music(song):
@@ -147,30 +179,23 @@ def compare_passwords(enrolled_password):
     else:
         speak("Password does not match.")
 
-# Function to show available caregivers
-def show_caregivers():
-    caregiver_window = tk.Toplevel(root)
-    caregiver_window.title("Available Caregivers")
-    caregiver_window.geometry("400x300")
-
-    tree = ttk.Treeview(caregiver_window, columns=("Name", "Specialty", "Phone"), show="headings")
-    tree.heading("Name", text="Name")
-    tree.heading("Specialty", text="Specialty")
-    tree.heading("Phone", text="Phone")
-
-    for caregiver in caregivers:
-        tree.insert("", "end", values=(caregiver["name"], caregiver["specialty"], caregiver["phone"]))
-
-    tree.pack(expand=True, fill="both")
-
-    def dial_caregiver():
-        selected_item = tree.selection()[0]
-        caregiver = tree.item(selected_item)["values"]
-        speak(f"Dialing {caregiver[0]} at {caregiver[2]}")
-        messagebox.showinfo("Dialing", f"Dialing {caregiver[0]} at {caregiver[2]}")
-
-    dial_button = ttk.Button(caregiver_window, text="Dial Selected Caregiver", command=dial_caregiver)
-    dial_button.pack(pady=10)
+# Function to handle user commands
+def handleCommand():
+    query = takeCommand().lower()
+    if 'play music' in query:
+        speak('What song would you like to play?')
+        song = takeCommand()
+        play_youtube_music(song)
+    elif 'search the web for' in query:
+        search_query = query.replace('search the web for', '').strip()
+        speak(f"Searching the web for {search_query}")
+        search_internet(search_query)
+    elif 'login' in query:
+        login_to_site()
+    elif 'caregiver' in query:
+        choose_caregiver_by_voice()
+    else:
+        speak("I'm sorry, I didn't understand that command.")
 
 # GUI setup
 root = tk.Tk()
@@ -182,9 +207,6 @@ label.pack(pady=10)
 
 start_button = ttk.Button(root, text="Start Listening", command=handleCommand)
 start_button.pack(pady=10)
-
-caregiver_button = ttk.Button(root, text="Show Caregivers", command=show_caregivers)
-caregiver_button.pack(pady=10)
 
 def on_closing():
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
