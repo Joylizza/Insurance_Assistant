@@ -1,0 +1,26 @@
+{
+    "auto": {
+      "questions": [
+        "What is the make and model of your car?",
+        "What year was your car manufactured?",
+        "Do you have any prior accidents or claims?"
+      ],
+      "base_premium": 100
+    },
+    "home": {
+      "questions": [
+        "What is the square footage of your home?",
+        "What year was your home built?",
+        "Do you have any security systems installed?"
+      ],
+      "base_premium": 150
+    },
+    "life": {
+      "questions": [
+        "What is your age?",
+        "Do you smoke?",
+        "Do you have any pre-existing medical conditions?"
+      ],
+      "base_premium": 200
+    }
+  }
