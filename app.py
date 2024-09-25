@@ -152,32 +152,44 @@ def search_internet(query):
         webbrowser.open(f"https://www.google.com/search?q={query.replace(' ', '+')}")
 
 # Function to login to a site using voice as password
+# Function to login to a site using voice as password
 def login_to_site():
     enrolled_password = enroll_voice_password()
     if enrolled_password:
         compare_passwords(enrolled_password)
+    else:
+        speak("Password not captured. Please try again.")
 
 # Function to capture and enroll the voice password as text
 def enroll_voice_password():
     speak("Please say your password.")
     password = takeCommand().lower()
+    if password == "none":
+        speak("Password not captured.")
+        return None
     print(f"Password enrolled: {password}")
     return password
 
 # Function to capture the voice for authentication
 def capture_voice_for_authentication():
     speak("Please say your password for authentication.")
-    return takeCommand().lower()
+    password = takeCommand().lower()
+    if password == "none":
+        speak("Password not captured.")
+        return None
+    return password
 
 # Function to compare the enrolled password with the spoken password
 def compare_passwords(enrolled_password):
     spoken_password = capture_voice_for_authentication()
     
-    if spoken_password and spoken_password == enrolled_password:
-        speak("Password matched.")
-        speak("Login access granted")
+    if spoken_password == None:
+        speak("Password not captured. Please try again.")
+    elif spoken_password == enrolled_password:
+        speak("Password matched. Login access granted.")
     else:
         speak("Password does not match.")
+
 
 # Function to handle user commands
 def handleCommand():
