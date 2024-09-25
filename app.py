@@ -19,16 +19,16 @@ voices = engine.getProperty('voices')
 engine.setProperty('voice', voices[1].id)
 
 # Africa's Talking API credentials
-username = "your_username"  # Replace with your Africa's Talking username
-api_key = "your_api_key"     # Replace with your Africa's Talking API key
+username = "Kwepo"  # Replace with your Africa's Talking username
+api_key = ""     # Replace with your Africa's Talking API key
 africastalking.initialize(username, api_key)
 sms = africastalking.SMS  # Initialize SMS service
 
 # Simulated caregiver database
 caregivers = [
     {"name": "John Doe", "specialty": "General Care", "phone": "+254714805460"},
-    {"name": "Jane Smith", "specialty": "Elder Care", "phone": "+254715678901"},
-    {"name": "Mike Johnson", "specialty": "Physical Therapy", "phone": "+254723456789"}
+    {"name": "Jane Smith", "specialty": "Elder Care", "phone": "+254799489045"},
+    {"name": "Mike Johnson", "specialty": "Physical Therapy", "phone": "+254113015464"}
 ]
 
 # Function to make the assistant speak
@@ -61,11 +61,12 @@ def send_sms_to_caregiver(caregiver):
     speak(f"Sending SMS to {caregiver['name']} at {phone_number}")
 
     # SMS message content
-    message = f"Hello {caregiver['name']}, you have been selected for a caregiving service. Please respond if available."
+    message = f"Hello {caregiver['name']}, you have been selected for a caregiving service by Liz Mwangi, Phone:+254714805460. Please respond if available."
 
     # Send SMS using Africa's Talking
+    sender='AFTKNG'
     try:
-        response = sms.send(message, [phone_number])
+        response = sms.send(message, [phone_number], sender)
         print(f"SMS sent: {response}")
         speak(f"SMS sent successfully to {caregiver['name']}")
     except Exception as e:
